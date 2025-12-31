@@ -25,9 +25,9 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
   // States for editable branding & metadata
   const [reportHeader, setReportHeader] = useState<string>(() => localStorage.getItem('school_name') || 'SMADA GENIUS ACADEMY');
   const [reportSubHeader, setReportSubHeader] = useState<string>(() => localStorage.getItem('school_slogan') || 'Sistem Evaluasi Digital Terintegrasi');
-  const [reportPeriod, setReportPeriod] = useState<string>(() => localStorage.getItem('report_period') || 'Semester Ganjil 2024');
+  const [reportPeriod, setReportPeriod] = useState<string>(() => localStorage.getItem('report_period') || 'Semester Ganjil 2024/2025');
   
-  // New States for Date and Signer Title
+  // Fixed Default values for Semarang 2026
   const [reportDateText, setReportDateText] = useState<string>(() => 
     localStorage.getItem('report_date_text') || `Semarang, 1 Januari 2026`
   );
@@ -274,19 +274,19 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2 col-span-1 md:col-span-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Sekolah</label>
-                    <input type="text" value={reportHeader} onChange={(e) => setReportHeader(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-black text-gray-700 outline-none" />
+                    <input type="text" value={reportHeader} onChange={(e) => setReportHeader(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-black text-gray-700 outline-none focus:border-indigo-500" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Periode Raport</label>
-                    <input type="text" value={reportPeriod} onChange={(e) => setReportPeriod(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
+                    <input type="text" value={reportPeriod} onChange={(e) => setReportPeriod(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none focus:border-indigo-500" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tempat & Tanggal Raport</label>
-                    <input type="text" value={reportDateText} onChange={(e) => setReportDateText(e.target.value)} placeholder="Contoh: Semarang, 1 Januari 2026" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
+                    <input type="text" value={reportDateText} onChange={(e) => setReportDateText(e.target.value)} placeholder="Contoh: Semarang, 1 Januari 2026" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none focus:border-indigo-500" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Jabatan Penandatangan</label>
-                    <input type="text" value={reportSignerTitle} onChange={(e) => setReportSignerTitle(e.target.value)} placeholder="Contoh: Wali Kelas" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
+                    <input type="text" value={reportSignerTitle} onChange={(e) => setReportSignerTitle(e.target.value)} placeholder="Contoh: Wali Kelas" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none focus:border-indigo-500" />
                   </div>
                 </div>
               </div>
@@ -301,7 +301,7 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
                        {isGenerating ? 'Loading...' : 'Gunakan AI'}
                     </button>
                  </div>
-                 <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-[2rem] text-sm italic min-h-[150px] outline-none" placeholder="Tulis komentar..." />
+                 <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} className="w-full p-6 bg-gray-50 border-2 border-gray-100 rounded-[2rem] text-sm italic min-h-[150px] outline-none focus:border-indigo-500" placeholder="Tulis komentar..." />
               </div>
 
               <div className="flex gap-4">
