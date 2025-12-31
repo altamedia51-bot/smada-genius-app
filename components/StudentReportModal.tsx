@@ -27,6 +27,14 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
   const [reportSubHeader, setReportSubHeader] = useState<string>(() => localStorage.getItem('school_slogan') || 'Sistem Evaluasi Digital Terintegrasi');
   const [reportPeriod, setReportPeriod] = useState<string>(() => localStorage.getItem('report_period') || 'Semester Ganjil 2024');
   
+  // New States for Date and Signer Title
+  const [reportDateText, setReportDateText] = useState<string>(() => 
+    localStorage.getItem('report_date_text') || `Semarang, 1 Januari 2026`
+  );
+  const [reportSignerTitle, setReportSignerTitle] = useState<string>(() => 
+    localStorage.getItem('report_signer_title') || 'Wali Kelas'
+  );
+  
   // Local state for results and tasks
   const [editableResults, setEditableResults] = useState<Result[]>([]);
   const [studentSubmissions, setStudentSubmissions] = useState<Submission[]>([]);
@@ -42,7 +50,6 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
     if (lastWithFeedback) setFeedback(lastWithFeedback.feedback || '');
   }, [results, submissions, studentId]);
 
-  // Fixed calculation for current view
   const examScoresArr = editableResults.map(r => r.score);
   const reviewedTasks = studentSubmissions.filter(s => s.status === 'reviewed');
   const taskScoresArr = reviewedTasks.map(s => s.grade || 0);
@@ -76,6 +83,8 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
     localStorage.setItem('school_name', reportHeader);
     localStorage.setItem('school_slogan', reportSubHeader);
     localStorage.setItem('report_period', reportPeriod);
+    localStorage.setItem('report_date_text', reportDateText);
+    localStorage.setItem('report_signer_title', reportSignerTitle);
 
     if (onUpdateResults) {
       const finalResults = editableResults.map((r, idx) => {
@@ -240,7 +249,8 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
                   <p className="border-b-2 border-gray-300 w-32 mx-auto"></p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-16">Semarang, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}<br/>Wali Kelas</p>
+                  {/* Display Dynamic Date and Signer Title */}
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-16">{reportDateText}<br/>{reportSignerTitle}</p>
                   <p className="font-black text-gray-900 uppercase underline">{teacherName || 'GURU KELAS'}</p>
                   <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">SMADA GENIUS ACADEMY</p>
                 </div>
@@ -261,14 +271,22 @@ const StudentReportModal: React.FC<StudentReportModalProps> = ({
                     <h3 className="text-lg font-black text-gray-800 leading-none uppercase">Profil Sekolah & Raport</h3>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 col-span-1 md:col-span-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Sekolah</label>
                     <input type="text" value={reportHeader} onChange={(e) => setReportHeader(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-black text-gray-700 outline-none" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Periode Raport</label>
                     <input type="text" value={reportPeriod} onChange={(e) => setReportPeriod(e.target.value)} className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tempat & Tanggal Raport</label>
+                    <input type="text" value={reportDateText} onChange={(e) => setReportDateText(e.target.value)} placeholder="Contoh: Semarang, 1 Januari 2026" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Jabatan Penandatangan</label>
+                    <input type="text" value={reportSignerTitle} onChange={(e) => setReportSignerTitle(e.target.value)} placeholder="Contoh: Wali Kelas" className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 outline-none" />
                   </div>
                 </div>
               </div>
