@@ -17,48 +17,49 @@ const App: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [students, setStudents] = useState<User[]>([]);
 
-  // Inisialisasi Data & Berlangganan Real-time Sync
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
     const initApp = async () => {
       try {
-        // 1. Muat Sesi Login
+        // 1. Muat Sesi Login Segera
         const savedUser = localStorage.getItem('current_user');
         if (savedUser) setUser(JSON.parse(savedUser));
 
-        // 2. Ambil Snapshot Data Awal
+        // 2. Ambil Data (Dengan Timeout Internal di Storage Service)
         const data = await cloudStorage.getAllData();
-        setExams(data.exams);
-        setResults(data.results);
-        setSubmissions(data.submissions);
-        setStudents(data.students);
         
-        // 3. Aktifkan Listener Real-time (Inti dari Multi-Device Sync)
+        // Update state lokal
+        setExams(data.exams || []);
+        setResults(data.results || []);
+        setSubmissions(data.submissions || []);
+        setStudents(data.students || []);
+        
+        // 3. Pasang Listener jika Cloud Aktif
         if (cloudStorage.isCloudActive()) {
           unsubscribe = cloudStorage.subscribeToData((cloudData) => {
             if (cloudData.exams) setExams(cloudData.exams);
             if (cloudData.results) setResults(cloudData.results);
             if (cloudData.submissions) setSubmissions(cloudData.submissions);
             if (cloudData.students) setStudents(cloudData.students);
-            console.log("SMADA Sync: Data diperbarui otomatis dari Cloud.");
           });
         }
 
-        // 4. Data Default (Hanya jika database benar-benar kosong)
-        if (data.students.length === 0 && !savedUser) {
-          // Fix: Explicitly type 'defaults' as User[] to resolve 'string' vs 'Role' type mismatch
+        // 4. Data Default (Fallback)
+        if (!data.students || data.students.length === 0) {
           const defaults: User[] = [
             { id: 'S-12345', name: 'Andi Pratama', role: 'student', nis: '12345', class: 'XII MIPA 1' },
             { id: 'S-12346', name: 'Siti Aminah', role: 'student', nis: '12346', class: 'XII MIPA 2' }
           ];
           setStudents(defaults);
-          await cloudStorage.saveData('students', defaults);
+          // Jangan menunggu penyimpanan cloud untuk membuka UI
+          cloudStorage.saveData('students', defaults);
         }
       } catch (error) {
         console.error("Initialization Error:", error);
       } finally {
-        setTimeout(() => setIsLoading(false), 500);
+        // Pastikan loading tertutup apa pun yang terjadi
+        setIsLoading(false);
       }
     };
 
@@ -66,14 +67,12 @@ const App: React.FC = () => {
     return () => { if (unsubscribe) unsubscribe(); };
   }, []);
 
-  // Helper untuk menyimpan data ke Cloud secara asinkron
   const syncToCloud = useCallback(async (key: string, data: any) => {
     setIsSyncing(true);
     await cloudStorage.saveData(key, data);
-    setTimeout(() => setIsSyncing(false), 500);
+    setIsSyncing(false);
   }, []);
 
-  // Login Logic
   const handleLogin = (userData: User): { success: boolean; message?: string } => {
     if (userData.role === 'student') {
       const found = students.find(s => s.nis === userData.nis);
@@ -94,7 +93,6 @@ const App: React.FC = () => {
     localStorage.removeItem('current_user');
   };
 
-  // HANDLERS (Tetap menggunakan logika existing namun diteruskan ke Cloud)
   const addExam = async (newE: Exam) => {
     const updated = [newE, ...exams];
     setExams(updated);

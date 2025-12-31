@@ -1,5 +1,5 @@
 
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
@@ -22,22 +22,36 @@ let isCloudEnabled = false;
 // Inisialisasi Firebase dengan proteksi bertingkat
 try {
   if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("PLACEHOLDER")) {
-    app = initializeApp(firebaseConfig);
+    // Gunakan app yang sudah ada jika tersedia untuk mencegah re-inisialisasi
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
     if (app) {
-      db = getFirestore(app);
-      isCloudEnabled = true;
-      console.log("SMADA Cloud: Firestore terhubung dengan sukses.");
+      try {
+        db = getFirestore(app);
+        isCloudEnabled = true;
+        console.log("SMADA Cloud: Firestore terhubung.");
+      } catch (firestoreError) {
+        console.warn("SMADA Warning: Gagal memuat layanan Firestore. Berjalan dalam mode Local.", firestoreError);
+        isCloudEnabled = false;
+      }
     }
   } else {
     console.warn("SMADA Mode: Berjalan dalam mode Local Storage (Offline).");
   }
 } catch (error) {
-  console.error("SMADA Critical: Gagal inisialisasi Firebase.", error);
+  console.error("SMADA Critical: Gagal inisialisasi Firebase Core.", error);
   isCloudEnabled = false;
 }
 
-// Helper untuk referensi dokumen pusat
 const getDocRef = () => (isCloudEnabled && db) ? doc(db, "system", "cloud_data") : null;
+
+// Helper untuk timeout promise
+const withTimeout = (promise: Promise<any>, ms: number) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+  ]);
+};
 
 export const cloudStorage = {
   isCloudActive() {
@@ -45,7 +59,6 @@ export const cloudStorage = {
   },
 
   async saveData(key: string, data: any) {
-    // Selalu simpan ke localStorage (Offline-First) sebagai backup utama
     localStorage.setItem(`cloud_${key}`, JSON.stringify(data));
 
     const docRef = getDocRef();
@@ -55,10 +68,6 @@ export const cloudStorage = {
         return { success: true, mode: 'cloud' };
       } catch (error: any) {
         console.error(`Sinkronisasi Cloud Gagal (${key}):`, error);
-        // Jika service terhenti di tengah jalan, nonaktifkan flag cloud sementara
-        if (error.message && error.message.includes("available")) {
-          isCloudEnabled = false;
-        }
         return { success: false, mode: 'local' };
       }
     }
@@ -66,7 +75,6 @@ export const cloudStorage = {
   },
 
   async getAllData() {
-    // Muat data lokal terlebih dahulu untuk akses instan
     const localData = {
       exams: JSON.parse(localStorage.getItem('cloud_exams') || '[]'),
       results: JSON.parse(localStorage.getItem('cloud_results') || '[]'),
@@ -77,10 +85,10 @@ export const cloudStorage = {
     const docRef = getDocRef();
     if (isCloudEnabled && docRef) {
       try {
-        const snap = await getDoc(docRef);
+        // Tambahkan timeout 5 detik agar tidak stuck selamanya
+        const snap = await withTimeout(getDoc(docRef), 5000) as any;
         if (snap.exists()) {
           const cloudData = snap.data();
-          // Merge data Cloud ke Lokal
           return {
             exams: cloudData.exams || localData.exams,
             results: cloudData.results || localData.results,
@@ -89,7 +97,7 @@ export const cloudStorage = {
           };
         }
       } catch (error) {
-        console.warn("Gagal memuat data Cloud, menggunakan cache lokal.");
+        console.warn("Koneksi Cloud lambat atau Timeout. Menggunakan data lokal.");
       }
     }
     return localData;
